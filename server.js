@@ -308,7 +308,8 @@ function auth(req, res, next) {
   const expected = process.env.MCP_AUTH_TOKEN;
   if (!expected) return res.status(503).json({ error: "MCP_AUTH_TOKEN is not configured" });
   const h = req.headers.authorization || "";
-  const given = h.startsWith("Bearer ") ? h.slice(7) : "";
+  // Bearer header, or ?key=... for clients (e.g. claude.ai custom connectors) that cannot send headers.
+  const given = h.startsWith("Bearer ") ? h.slice(7) : typeof req.query.key === "string" ? req.query.key : "";
   if (!crypto.timingSafeEqual(sha(given), sha(expected))) return res.status(401).json({ error: "unauthorized" });
   next();
 }
